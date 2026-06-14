@@ -1,0 +1,35 @@
+# Terraform state files (contain sensitive resource attributes including passwords)
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Terraform local directory (provider binaries, modules cache)
+.terraform/
+
+# Variable files that may contain secrets
+terraform.tfvars
+*.tfvars
+*.tfvars.json
+
+# Terraform crash log
+crash.log
+crash.*.log
+
+# Terraform plan output (may contain secrets)
+*.tfplan
+
+# Override files (local overrides)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
