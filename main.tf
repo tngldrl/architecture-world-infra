@@ -57,6 +57,18 @@ variable "api_base_url" {
   default     = "https://architecture-world-api-ulti3dddka-an.a.run.app"
 }
 
+variable "github_app_id" {
+  description = "The ID of the GitHub App"
+  type        = string
+  default     = ""
+}
+
+variable "github_app_install_url" {
+  description = "The installation URL of the GitHub App"
+  type        = string
+  default     = ""
+}
+
 # ------------------------------------------------------------------------
 # Artifact Registry for Container Images
 # ------------------------------------------------------------------------
@@ -261,7 +273,7 @@ resource "google_cloud_run_v2_service" "mcp_service" {
         cpu_idle = false
         limits = {
           cpu    = "1"
-          memory = "512Mi"
+          memory = "2Gi"
         }
       }
       env {
@@ -304,7 +316,7 @@ resource "google_cloud_run_v2_service" "api_service" {
         cpu_idle = false
         limits = {
           cpu    = "1"
-          memory = "512Mi"
+          memory = "1Gi"
         }
       }
       env {
@@ -324,6 +336,36 @@ resource "google_cloud_run_v2_service" "api_service" {
       env {
         name  = "API_BASE_URL"
         value = var.api_base_url
+      }
+      env {
+        name  = "ALLOWED_ORIGINS"
+        value = "https://architecture-world-web-809337815425.asia-northeast1.run.app,https://architecture-world-web-ulti3dddka-an.a.run.app,http://localhost:3000"
+      }
+      env {
+        name  = "GITHUB_APP_ID"
+        value = var.github_app_id
+      }
+      env {
+        name  = "GITHUB_APP_INSTALL_URL"
+        value = var.github_app_install_url
+      }
+      env {
+        name = "GITHUB_APP_PRIVATE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.github_app_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "GITHUB_APP_WEBHOOK_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.github_webhook_secret.secret_id
+            version = "latest"
+          }
+        }
       }
       volume_mounts {
         name       = "cloudsql"
