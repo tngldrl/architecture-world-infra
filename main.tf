@@ -272,7 +272,7 @@ resource "google_cloud_run_v2_service" "mcp_service" {
       resources {
         cpu_idle = false
         limits = {
-          cpu    = "1"
+          cpu    = "2"
           memory = "2Gi"
         }
       }
