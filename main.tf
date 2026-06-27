@@ -69,6 +69,18 @@ variable "github_app_install_url" {
   default     = ""
 }
 
+variable "admin_github_id" {
+  description = "The GitHub numeric ID of the admin user"
+  type        = string
+  sensitive   = true
+}
+
+variable "admin_password_hash" {
+  description = "The SHA-256 password hash of the admin user"
+  type        = string
+  sensitive   = true
+}
+
 # ------------------------------------------------------------------------
 # Artifact Registry for Container Images
 # ------------------------------------------------------------------------
@@ -128,6 +140,40 @@ resource "google_secret_manager_secret_version" "database_url" {
   lifecycle {
     ignore_changes = [secret_data]
   }
+}
+
+import {
+  to = google_secret_manager_secret.admin_github_id
+  id = "projects/${var.project_id}/secrets/admin-github-id"
+}
+
+import {
+  to = google_secret_manager_secret.admin_password_hash
+  id = "projects/${var.project_id}/secrets/admin-password-hash"
+}
+
+resource "google_secret_manager_secret" "admin_github_id" {
+  secret_id = "admin-github-id"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "admin_github_id" {
+  secret      = google_secret_manager_secret.admin_github_id.id
+  secret_data = var.admin_github_id
+}
+
+resource "google_secret_manager_secret" "admin_password_hash" {
+  secret_id = "admin-password-hash"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "admin_password_hash" {
+  secret      = google_secret_manager_secret.admin_password_hash.id
+  secret_data = var.admin_password_hash
 }
 
 # ------------------------------------------------------------------------
@@ -363,6 +409,24 @@ resource "google_cloud_run_v2_service" "api_service" {
         value_source {
           secret_key_ref {
             secret  = google_secret_manager_secret.github_webhook_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "ADMIN_GITHUB_ID"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.admin_github_id.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "ADMIN_PASSWORD_HASH"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.admin_password_hash.secret_id
             version = "latest"
           }
         }
