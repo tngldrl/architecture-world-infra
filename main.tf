@@ -86,8 +86,8 @@ variable "admin_password_hash" {
 # ------------------------------------------------------------------------
 resource "google_artifact_registry_repository" "repo" {
   location      = var.region
-  repository_id = "architecture-world-repo"
-  description   = "Docker repository for Architecture World services"
+  repository_id = "micro-grand-maison-repo"
+  description   = "Docker repository for Micro Grand Maison services"
   format        = "DOCKER"
 }
 
@@ -385,7 +385,7 @@ resource "google_cloud_run_v2_service" "api_service" {
       }
       env {
         name  = "ALLOWED_ORIGINS"
-        value = "https://architecture-world-web-809337815425.asia-northeast1.run.app,https://architecture-world-web-ulti3dddka-an.a.run.app,http://localhost:3000"
+        value = "https://web.micro-grandmaison.com, https://architecture-world-web-809337815425.asia-northeast1.run.app,https://architecture-world-web-ulti3dddka-an.a.run.app,http://localhost:3000"
       }
       env {
         name  = "GITHUB_APP_ID"
@@ -469,7 +469,7 @@ resource "google_cloud_run_v2_service" "web_service" {
       }
       env {
         name  = "NEXT_PUBLIC_API_URL"
-        value = google_cloud_run_v2_service.api_service.uri
+        value = "https://api.micro-grandmaison.com"
       }
     }
   }
