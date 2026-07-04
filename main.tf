@@ -19,7 +19,7 @@ provider "google" {
 variable "project_id" {
   description = "The GCP project ID"
   type        = string
-  default     = "architecture-world-demo"
+  default     = "micro-grand-maison-demo"
 }
 
 variable "region" {
@@ -38,23 +38,23 @@ variable "github_repositories" {
   description = "List of GitHub repository names to authorize (without owner)"
   type        = list(string)
   default     = [
-    "architecture-world-api",
-    "architecture-world-mcp",
-    "architecture-world-web",
-    "repostory"
+    "micro-grand-maison-api",
+    "micro-grand-maison-mcp",
+    "micro-grand-maison-web",
+    "micro-grand-maison-infra"
   ]
 }
 
 variable "mcp_service_url" {
   description = "The URL of the deployed MCP Cloud Run service. Cloud Run URLs cannot be self-referenced during deployment (circular dependency), so this must be set manually after first deployment via terraform.tfvars."
   type        = string
-  default     = "https://architecture-world-mcp-ulti3dddka-an.a.run.app"
+  default     = "https://mcp.micro-grandmaison.com"
 }
 
 variable "api_base_url" {
   description = "The URL of the deployed API Cloud Run service. Cloud Run URLs cannot be self-referenced during deployment (circular dependency), so this must be set manually after first deployment via terraform.tfvars."
   type        = string
-  default     = "https://architecture-world-api-ulti3dddka-an.a.run.app"
+  default     = "https://api.micro-grandmaison.com"
 }
 
 variable "github_app_id" {
@@ -134,7 +134,7 @@ resource "google_secret_manager_secret" "database_url" {
 
 resource "google_secret_manager_secret_version" "database_url" {
   secret      = google_secret_manager_secret.database_url.id
-  secret_data = "postgresql://${google_sql_user.db_user.name}:${random_password.db_password.result}@/architecture_world?host=/cloudsql/${google_sql_database_instance.main_db.connection_name}"
+  secret_data = "postgresql://${google_sql_user.db_user.name}:${random_password.db_password.result}@/${google_sql_database.database.name}?host=/cloudsql/${google_sql_database_instance.main_db.connection_name}"
 
   # Prevent Terraform from showing the secret value in plan output
   lifecycle {
@@ -180,7 +180,7 @@ resource "google_secret_manager_secret_version" "admin_password_hash" {
 # Cloud SQL: PostgreSQL Database
 # ------------------------------------------------------------------------
 resource "google_sql_database_instance" "main_db" {
-  name             = "architecture-world-db"
+  name             = "micro-grand-maison-db"
   database_version = "POSTGRES_15"
   region           = var.region
   deletion_protection = false # Set to true for production systems
@@ -191,7 +191,7 @@ resource "google_sql_database_instance" "main_db" {
 }
 
 resource "google_sql_database" "database" {
-  name     = "architecture_world"
+  name     = "micro_grand_maison"
   instance = google_sql_database_instance.main_db.name
 }
 
@@ -304,7 +304,7 @@ resource "google_service_account_iam_member" "github_actions_binding" {
 # Cloud Run: MCP Context Server
 # ------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "mcp_service" {
-  name     = "architecture-world-mcp"
+  name     = "micro-grand-maison-mcp"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
@@ -331,6 +331,10 @@ resource "google_cloud_run_v2_service" "mcp_service" {
         name  = "MCP_SERVICE_URL"
         value = var.mcp_service_url
       }
+      env {
+        name  = "VERTEX_AI_LOCATION"
+        value = "global"
+      }
     }
   }
 }
@@ -347,7 +351,7 @@ resource "google_cloud_run_v2_service_iam_member" "mcp_public" {
 # Cloud Run: API Service
 # ------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "api_service" {
-  name     = "architecture-world-api"
+  name     = "micro-grand-maison-api"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
@@ -394,6 +398,10 @@ resource "google_cloud_run_v2_service" "api_service" {
       env {
         name  = "GITHUB_APP_INSTALL_URL"
         value = var.github_app_install_url
+      }
+      env {
+        name  = "VERTEX_AI_LOCATION"
+        value = "global"
       }
       env {
         name = "GITHUB_APP_PRIVATE_KEY"
@@ -456,7 +464,7 @@ resource "google_cloud_run_v2_service_iam_member" "api_public" {
 # Cloud Run: Web Frontend (Next.js)
 # ------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "web_service" {
-  name     = "architecture-world-web"
+  name     = "micro-grand-maison-web"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
