@@ -339,12 +339,12 @@ resource "google_cloud_run_v2_service" "mcp_service" {
   }
 }
 
-# Allow public unauthenticated access to the MCP service internally/externally
-resource "google_cloud_run_v2_service_iam_member" "mcp_public" {
+# Allow ONLY the backend API service account to invoke the MCP service
+resource "google_cloud_run_v2_service_iam_member" "mcp_invoker" {
   location = var.region
   name     = google_cloud_run_v2_service.mcp_service.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = "serviceAccount:${google_service_account.run_sa.email}"
 }
 
 # ------------------------------------------------------------------------
