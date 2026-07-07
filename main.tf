@@ -309,7 +309,14 @@ resource "google_cloud_run_v2_service" "mcp_service" {
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
-    service_account = google_service_account.run_sa.email
+    service_account                   = google_service_account.run_sa.email
+    max_instance_request_concurrency = 5
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 3
+    }
+
     containers {
       image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/mcp:latest"
       ports {
